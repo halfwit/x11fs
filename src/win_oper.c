@@ -140,6 +140,7 @@ char *class_read(int wid)
 
 char *event_read(int wid)
 {
+  (void) wid;
 	return get_events();
 }
 
@@ -177,4 +178,63 @@ void focused_write(int wid, const char *buf)
 	}
 
 	focus(id);
+}
+
+/* Search if string exists */
+int search_str(char * s1, char * s2) {
+  char * token;
+  while((token = strtok(s2, "\n")))
+  {
+    if (strcmp(token, s1)) 
+      return 1;
+  }
+  return 0;
+}
+
+char *window_group_read(int wid)
+{
+  return get_window_group(wid);
+}
+
+void window_group_write(int wid, const char *buf) 
+{
+  /* If string does not exists in _ACTIVE */
+  char * groups = get_active_groups();
+  if(search_str(strdup(buf), groups)) {
+    char * reply;
+    asprintf(&reply, "%s\n%s", groups, buf);
+    set_active_groups(reply);
+    free(reply);
+  }
+  set_window_group(wid, buf);
+}
+
+char *active_groups_read(int wid)
+{
+  (void) wid;
+  return get_active_groups();
+}
+
+/** Track mapped state of all windows  
+ *  if window has _GROUP that matches string in active, it is mapped
+ *  if window has _GROUP that matches string in inactive, it is unmapped
+ *  if active / inactive has group name with no matches, remove it
+ */
+void active_groups_write(int wid, const char *buf)
+{
+  (void) wid; 
+  set_active_groups(buf);
+}
+
+char *inactive_groups_read(int wid)
+{
+  (void) wid;
+  return get_inactive_groups();
+}
+
+void inactive_groups_write(int wid, const char *buf)
+{
+  (void) wid;
+  
+  set_inactive_groups(buf);
 }

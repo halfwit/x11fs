@@ -47,3 +47,12 @@ void set_stack_mode(int wid, int position);
 void set_subscription(int wid, int eventmask);
 
 char *get_events();
+
+char *get_window_group(int wid);
+void set_window_group(int wid, const char *buf); 
+
+char *get_active_groups();
+void set_active_groups(const char *buf);
+
+char *get_inactive_groups();
+void set_inactive_groups(const char *buf);

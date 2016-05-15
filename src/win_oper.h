@@ -45,3 +45,15 @@ char *event_read(int wid);
 
 char *focused_read(int wid);
 void focused_write(int wid, const char *buf);
+
+
+char *window_group_read(int wid);
+void window_group_write(int wid, const char *buf);
+
+
+char *active_groups_read(int wid);
+void active_groups_write(int wid, const char *buf);
+
+
+char *inactive_groups_read(int wid);
+void inactive_groups_write(int wid, const char *buf);

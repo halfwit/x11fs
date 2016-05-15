@@ -32,6 +32,7 @@ static const struct x11fs_file x11fs_files[] = {
 	{"/root/geometry/width",  S_IFREG | 0400, false, false, root_width_read,      NULL},
 	{"/root/geometry/height", S_IFREG | 0400, false, false, root_height_read,     NULL},
 	{"/0x*",                  S_IFDIR | 0700, false, true,  NULL,                 NULL},
+  {"/0x*/group",            S_IFREG | 0600, false, false, window_group_read,    window_group_write},
 	{"/0x*/border",           S_IFDIR | 0700, false, true,  NULL,                 NULL},
 	{"/0x*/border/color",     S_IFREG | 0200, false, false, NULL,                 border_color_write},
 	{"/0x*/border/width",     S_IFREG | 0600, false, false, border_width_read,    border_width_write},
@@ -44,7 +45,9 @@ static const struct x11fs_file x11fs_files[] = {
 	{"/0x*/ignored",          S_IFREG | 0600, false, false, ignored_read,         ignored_write},
 	{"/0x*/stack",            S_IFREG | 0200, false, false, NULL,                 stack_write},
 	{"/0x*/title",            S_IFREG | 0400, false, false, title_read,           NULL},
-	{"/0x*/class",            S_IFREG | 0400, false, false, class_read,           NULL},
+  {"/0x*/class",            S_IFREG | 0400, false, false, class_read,           NULL},
+  {"/active",               S_IFREG | 0600, false, false, active_groups_read,   active_groups_write},
+  {"/inactive",             S_IFREG | 0600, false, false, inactive_groups_read, inactive_groups_write},
 	{"/focused",              S_IFREG | 0600, false, false, focused_read,         focused_write},
 	{"/event",                S_IFREG | 0400, true,  false, event_read,           NULL},
 };
