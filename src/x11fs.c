@@ -47,7 +47,7 @@ static const struct x11fs_file x11fs_files[] = {
 	{"/0x*/title",            S_IFREG | 0400, false, false, title_read,           NULL},
   {"/0x*/class",            S_IFREG | 0400, false, false, class_read,           NULL},
   {"/active",               S_IFREG | 0600, false, false, active_groups_read,   active_groups_write},
-  {"/inactive",             S_IFREG | 0600, false, false, inactive_groups_read, inactive_groups_write},
+  {"/inactive",             S_IFREG | 0400, false, false, inactive_groups_read, NULL},
 	{"/focused",              S_IFREG | 0600, false, false, focused_read,         focused_write},
 	{"/event",                S_IFREG | 0400, true,  false, event_read,           NULL},
 };

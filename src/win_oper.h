@@ -56,4 +56,3 @@ void active_groups_write(int wid, const char *buf);
 
 
 char *inactive_groups_read(int wid);
-void inactive_groups_write(int wid, const char *buf);
