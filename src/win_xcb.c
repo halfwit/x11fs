@@ -347,7 +347,7 @@ char *get_window_group(int wid)
 
 void set_window_group(int wid, char *buf) 
 {
-  xcb_change_property(conn, XCB_PROP_MODE_REPLACE, wid, xcb_atom_get(conn, "_GROUPS"), XCB_ATOM_STRING, 8, strlen(buf), buf);
+  xcb_change_property(conn, XCB_PROP_MODE_REPLACE, wid, xcb_atom_get(conn, "_GROUPS"), XCB_ATOM_STRING, 8, strlen(buf)+1, buf);
   xcb_flush(conn);
 }
 
@@ -365,7 +365,7 @@ char *get_active_groups()
 }
 void set_active_groups(char *buf)
 {
-  xcb_change_property(conn, XCB_PROP_MODE_REPLACE, scrn->root, xcb_atom_get(conn, "_ACTIVE"), XCB_ATOM_STRING, 8, strlen(buf), buf);
+  xcb_change_property(conn, XCB_PROP_MODE_REPLACE, scrn->root, xcb_atom_get(conn, "_ACTIVE"), XCB_ATOM_STRING, 8, strlen(buf)+1, buf);
   xcb_flush(conn);
 }
 
@@ -383,6 +383,6 @@ char *get_inactive_groups()
 }
 void set_inactive_groups(char *buf)
 {
-  xcb_change_property(conn, XCB_PROP_MODE_REPLACE, scrn->root, xcb_atom_get(conn, "_INACTIVE"), XCB_ATOM_STRING, 8, strlen(buf), buf);
+  xcb_change_property(conn, XCB_PROP_MODE_REPLACE, scrn->root, xcb_atom_get(conn, "_INACTIVE"), XCB_ATOM_STRING, 8, strlen(buf)+1, buf);
   xcb_flush(conn);
 }

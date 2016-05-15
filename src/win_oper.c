@@ -180,7 +180,9 @@ void focused_write(int wid, const char *buf)
 	focus(id);
 }
 
-/* Search if string exists */
+
+/* Search if needle s1 exists in haystack s2 */
+
 int search_str(char * s1, char * s2) {
   char * token;
   while((token = strtok(s2, "\n")))
@@ -191,50 +193,84 @@ int search_str(char * s1, char * s2) {
   return 0;
 }
 
-char *window_group_read(int wid)
-{
-  return get_window_group(wid);
+
+/* Return wid _GROUP atom: */
+
+char *window_group_read(int wid) 
+{ 
+  return get_window_group(wid); 
 }
 
+
+/* Set windows group ATOM: 
+ * If mapped and string is not in _ACTIVE, append string
+ * If unmapped and string is not in _INACTIVE, append string
+ * Set wid _GROUP atom to buf 
+ */
+
 void window_group_write(int wid, const char *buf) 
-{
-  /* If string does not exists in _ACTIVE */
-  char * groups = get_active_groups();
+{ 
+  char * groups = get_mapped(wid) ? get_active_groups() : get_inactive_groups();
   if(search_str(strdup(buf), groups)) {
-    char * reply;
-    asprintf(&reply, "%s\n%s", groups, buf);
+    char * reply = malloc(snprintf(NULL, 0, "%s%s", groups, buf)+1);
+    sprintf(reply, "%s%s", groups, buf);
     set_active_groups(reply);
     free(reply);
   }
   set_window_group(wid, buf);
 }
 
+
+/* Remove false entries:  
+ * groups in active or inactive that don't map to real windows 
+ * groups in active that map to inactive windows
+ * groups in inactive that map to active windows 
+ */
+
+void clean_atoms()
+{
+ 
+}
+
+
+/* Read root window _ACTIVE atom: */
+
 char *active_groups_read(int wid)
 {
   (void) wid;
+  clean_atoms();
   return get_active_groups();
 }
 
-/** Track mapped state of all windows  
- *  if window has _GROUP that matches string in active, it is mapped
- *  if window has _GROUP that matches string in inactive, it is unmapped
- *  if active / inactive has group name with no matches, remove it
+
+/* Set root window _ACTIVE atom:
+ * If window is mapped but isn't on this list, unmap it. 
+ * If window is unmapped but is on this list, map it 
  */
+
 void active_groups_write(int wid, const char *buf)
 {
-  (void) wid; 
+ 
+  int * windows = list_windows();
+  while((wid=*(windows++))) {
+    if(get_mapped(wid)) {
+      if(!search_str(get_window_group(wid), get_active_groups()))
+        set_mapped(wid, "false\n");
+    } else {
+      if(search_str(get_window_group(wid), get_active_groups()))
+        set_mapped(wid, "true\n");
+    }
+  }
+  clean_atoms();
   set_active_groups(buf);
 }
+
+
+/* Return root window _INACTIVE atom: */
 
 char *inactive_groups_read(int wid)
 {
   (void) wid;
+  clean_atoms();
   return get_inactive_groups();
-}
-
-void inactive_groups_write(int wid, const char *buf)
-{
-  (void) wid;
-  
-  set_inactive_groups(buf);
 }
