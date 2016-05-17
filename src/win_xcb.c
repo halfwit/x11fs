@@ -332,10 +332,9 @@ char *get_events(){
 	return event_string;
 }
 
-char *get_window_group(int wid) 
-{
-  xcb_get_property_reply_t *prop_r = get_prop(wid, xcb_atom_get(conn, "_GROUPS"), XCB_ATOM_STRING);
-  if(!prop_r)
+char *get_window_group(int wid) {
+  xcb_get_property_reply_t *prop_r = get_prop(wid, xcb_atom_get(conn, "_GROUP"), XCB_ATOM_STRING);
+  if(xcb_get_property_value_length(prop_r) < 1)
     return NULL;
   char *group = (char *) xcb_get_property_value(prop_r);
   int len = xcb_get_property_value_length(prop_r);
@@ -345,44 +344,8 @@ char *get_window_group(int wid)
   return group_string;
 }
 
-void set_window_group(int wid, char *buf) 
-{
-  xcb_change_property(conn, XCB_PROP_MODE_REPLACE, wid, xcb_atom_get(conn, "_GROUPS"), XCB_ATOM_STRING, 8, strlen(buf)+1, buf);
-  xcb_flush(conn);
-}
 
-char *get_active_groups() 
-{
-  xcb_get_property_reply_t *prop_r = get_prop(scrn->root, xcb_atom_get(conn, "_ACTIVE"), XCB_ATOM_STRING);
-  if(!prop_r)
-    return NULL;
-  char *group = (char *) xcb_get_property_value(prop_r);
-  int len = xcb_get_property_value_length(prop_r);
-  char *group_string=malloc(len+1);
-  sprintf(group_string, "%.*s", len, group);
-  free(prop_r);
-  return group_string;
-}
-void set_active_groups(char *buf)
-{
-  xcb_change_property(conn, XCB_PROP_MODE_REPLACE, scrn->root, xcb_atom_get(conn, "_ACTIVE"), XCB_ATOM_STRING, 8, strlen(buf)+1, buf);
-  xcb_flush(conn);
-}
-
-char *get_inactive_groups()
-{
-  xcb_get_property_reply_t *prop_r = get_prop(scrn->root, xcb_atom_get(conn, "_INACTIVE"), XCB_ATOM_STRING);
-  if(!prop_r)
-    return NULL;
-  char *group = (char *) xcb_get_property_value(prop_r);
-  int len = xcb_get_property_value_length(prop_r);
-  char *group_string=malloc(len+1);
-  sprintf(group_string, "%.*s", len, group);
-  free(prop_r);
-  return group_string;
-}
-void set_inactive_groups(char *buf)
-{
-  xcb_change_property(conn, XCB_PROP_MODE_REPLACE, scrn->root, xcb_atom_get(conn, "_INACTIVE"), XCB_ATOM_STRING, 8, strlen(buf)+1, buf);
+void set_window_group(int wid, char *buf) {
+  xcb_change_property(conn, XCB_PROP_MODE_REPLACE, wid, xcb_atom_get(conn, "_GROUP"), XCB_ATOM_STRING, 8, strlen(buf)+1, buf);
   xcb_flush(conn);
 }

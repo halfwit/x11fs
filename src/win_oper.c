@@ -180,15 +180,20 @@ void focused_write(int wid, const char *buf)
 	focus(id);
 }
 
+/* Search if needle s1 exists in haystack s2 
+ * Splitting around " " and "\n" and "\t"
+ */
 
-/* Search if needle s1 exists in haystack s2 */
-
-int search_str(char * s1, char * s2) {
+int search_str(char * s1, const char * s2) {
+  syslog(LOG_ERR, "Strings in: %s %s\n", s1, strtok(strdup(s2), " \n\t\0"));
+  char * stack = strdup(s2);
   char * token;
-  while((token = strtok(s2, "\n")))
-  {
-    if (strcmp(token, s1)) 
+  for(token = strtok(stack, " \n\t\0"); token != NULL; token = strtok(NULL, " \n\t\0")) { 
+    if (!strcmp(s1, token)) {
+      syslog(LOG_ERR, "Match - %s and %s\n", s1, token);
       return 1;
+    }
+    token = strtok(NULL, " \t\n\0");
   }
   return 0;
 }
@@ -196,81 +201,79 @@ int search_str(char * s1, char * s2) {
 
 /* Return wid _GROUP atom: */
 
-char *window_group_read(int wid) 
+char * window_group_read(int wid) 
 { 
   return get_window_group(wid); 
 }
 
 
 /* Set windows group ATOM: 
- * If mapped and string is not in _ACTIVE, append string
- * If unmapped and string is not in _INACTIVE, append string
  * Set wid _GROUP atom to buf 
  */
 
 void window_group_write(int wid, const char *buf) 
 { 
-  char * groups = get_mapped(wid) ? get_active_groups() : get_inactive_groups();
-  if(search_str(strdup(buf), groups)) {
-    char * reply = malloc(snprintf(NULL, 0, "%s%s", groups, buf)+1);
-    sprintf(reply, "%s%s", groups, buf);
-    set_active_groups(reply);
-    free(reply);
-  }
   set_window_group(wid, buf);
 }
 
 
-/* Remove false entries:  
- * groups in active or inactive that don't map to real windows 
- * groups in active that map to inactive windows
- * groups in inactive that map to active windows 
- */
 
-void clean_atoms()
-{
- 
-}
-
-
-/* Read root window _ACTIVE atom: */
+/* Return list of active groups: */
 
 char *active_groups_read(int wid)
 {
-  (void) wid;
-  clean_atoms();
-  return get_active_groups();
+  //int * win = list_windows();
+ 
+  return strdup("Fuck\nThis\nShit\nIs\nAwesome\n");
 }
 
-
-/* Set root window _ACTIVE atom:
- * If window is mapped but isn't on this list, unmap it. 
- * If window is unmapped but is on this list, map it 
+/* Set mapping of active windows:
+ * If group is mapped, but not on list, unmap it
+ * If group is unmapped, but on list, map it
  */
+
+/* echo "4" >> x11fs/active */
 
 void active_groups_write(int wid, const char *buf)
 {
- 
   int * windows = list_windows();
+  char * group;
   while((wid=*(windows++))) {
-    if(get_mapped(wid)) {
-      if(!search_str(get_window_group(wid), get_active_groups()))
-        set_mapped(wid, "false\n");
-    } else {
-      if(search_str(get_window_group(wid), get_active_groups()))
-        set_mapped(wid, "true\n");
+    if((group = strtok(get_window_group(wid), " \n\t\0"))) {
+      if(get_mapped(wid) && !search_str(strdup(group), strdup(buf))) {
+        set_mapped(wid, 0);
+        syslog(LOG_ERR, "unmapping: mapped but not in string g %s b %s\n", group, buf);
+      } else if (!get_mapped(wid) && search_str(strdup(group), strdpu(buf))) {
+        syslog(LOG_ERR, "mapping: unmapped but in string g %s b %s\n", group, buf);
+        set_mapped(wid, 1);
+      }
     }
   }
-  clean_atoms();
-  set_active_groups(buf);
 }
 
 
-/* Return root window _INACTIVE atom: */
+/* Return list of inactive groups: */
 
 char *inactive_groups_read(int wid)
 {
   (void) wid;
-  clean_atoms();
-  return get_inactive_groups();
+  return strdup("Bar\n");
+}
+
+/* Set inactive windows:
+ * If group is mapped, but on list, unmap it
+ * echo "4" >> x11fs/inactive */
+
+void inactive_groups_write(int wid, const char *buf)
+{
+  int * windows = list_windows();
+  char * group;
+  while((wid=*(windows++))) {
+    if((group = strtok(get_window_group(wid), " \n\t\0"))) {
+      if(get_mapped(wid) && search_str(strdup(group), strdup(buf))) {
+        syslog(LOG_ERR, "unmapping: (inactive) mapped but not in string g %s b %s\n", group, buf);
+        set_mapped(wid, 0);
+      }
+    }
+  }
 }
