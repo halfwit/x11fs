@@ -101,6 +101,11 @@ void stack_write(int wid, const char *buf)
 char *title_read(int wid)
 {
 	char *title=get_title(wid);
+  if (!strcmp(title, "")) {
+    char **classes=get_class(wid);
+    title=classes[0];
+    free(classes);
+  }
 	size_t title_len = strlen(title);
 	char *title_string=malloc(title_len+2);
 	if ( !title_string ) {
@@ -236,17 +241,15 @@ char *append(char *s1, char *s2) {
   return strdup(reply);
 }
 
-/* Return list of active groups: */
-
 char *active_groups_read(int wid)
 {
-  //int * win = list_windows();
- (void) wid;  
+
+  (void) wid;  
   int *windows = list_windows(); 
   char * group;
   char * reply;
   while((wid=*(windows++))) {
-    if((group = strtok(get_window_group(wid), "\n\t\0"))) {
+    if((group = strtok(get_window_group(wid), " \n\t\0"))) {
       if(get_mapped(wid))
         reply = append(strdup(reply), strdup(group));
     }
@@ -255,44 +258,16 @@ char *active_groups_read(int wid)
 }
 
 
-/* Set mapping of active windows:
- * If group is mapped, but not on list, unmap it
- * If group is mapped, but not on list, do nothing
- * If group is unmapped, but on list, map it
- * If group is unmapped, but not on list, do nothing
- */
-
-/* echo "4" >> x11fs/active */
-
-void active_groups_write(int wid, const char *buf)
-{
-  int *windows = list_windows();
-  char *group;
-  syslog(LOG_ERR, "Buffer into main function is %s\n", strdup(buf));
-  while((wid=*(windows++))) {
-    if((group = strtok(get_window_group(wid), "\n\t\0"))) {
-      syslog(LOG_ERR, "Group coming in is %s\n", group);
-      if(get_mapped(wid) && !search_str(strdup(group), strdup(buf))) {
-        set_mapped(wid, 0);
-        syslog(LOG_ERR, "unmapping: mapped but not in string g %s b %s\n", group, buf);
-      } else if (!get_mapped(wid) && search_str(strdup(group), strdup(buf))) {
-        syslog(LOG_ERR, "mapping: unmapped but in string g %s b %s\n", group, buf);
-        set_mapped(wid, 1);
-      }
-    }
-  }
-}
-
 /* Return list of inactive groups: */
 
 char *inactive_groups_read(int wid)
 {
-  (void) wid;  
+  (void) wid;
   int *windows = list_windows();
   char * group;
   char * reply;
   while((wid=*(windows++))) {
-    if((group = strtok(get_window_group(wid), "\n\t\0"))) {
+    if((group = strtok(get_window_group(wid), " \n\t\0"))) {
       if(!get_mapped(wid))
         reply = append(strdup(reply), strdup(group));
     }
@@ -301,27 +276,29 @@ char *inactive_groups_read(int wid)
 }
 
 
-/* Set inactive windows:
- * If group is mapped, but on list, unmap it
- * If group is mapped, but not on list, do nothing
- * If group is unmapped, but not on list, map it
- * If group is unmapped, but on list, do nothing
- * echo "4" >> x11fs/inactive */
 
-void inactive_groups_write(int wid, const char *buf)
+void group_write(int wid, const char *buf, int map)
 {
   int * windows = list_windows();
   char * group;
   while((wid=*(windows++))) {
-    if((group = strtok(get_window_group(wid), "\n\t\0"))) {
-      syslog(LOG_ERR, "Group coming in is %s\n", group);
-      if(get_mapped(wid) && search_str(strdup(group), strdup(buf))) {
-        syslog(LOG_ERR, "unmapping: (inactive) mapped but in string g %s b %s\n", group, buf);
-        set_mapped(wid, 0);
-      } else if (!get_mapped(wid) && !search_str(strdup(group), strdup(buf))){
-        syslog(LOG_ERR, "mapping: (inactive) unmapped but not in string g %s b %s\n", group, buf);
-        set_mapped(wid, 1);
-      }
+    if((group = strtok(get_window_group(wid), " \n\t\0")) && search_str(strdup(group), strdup(buf))) {
+      set_mapped(wid, map);
     }
   }
+}
+
+/* echo "4" > x11fs/inactive */
+void inactive_groups_write(int wid, const char *buf)
+{
+  /* TODO: Sanitize input */
+  group_write(wid, buf, 0);
+ }
+
+/* echo "4" > x11fs/active */
+
+void active_groups_write(int wid, const char *buf)
+{
+  /* TODO: Sanitize input */
+  group_write(wid, buf, 1);
 }

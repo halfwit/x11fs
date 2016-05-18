@@ -234,8 +234,14 @@ int get_ignored(int wid)
 char *get_title(int wid)
 {
     xcb_get_property_reply_t *prop_r = get_prop(wid, XCB_ATOM_WM_NAME, XCB_ATOM_STRING);
-    if(!prop_r)
-        return NULL;
+    
+    /* Try WM_NAME atom if XCB_ATOM_WM_NAME not set */
+    if(xcb_get_property_value_length(prop_r) < 1) {
+        prop_r = get_prop(wid, xcb_atom_get(conn, "WM_NAME"), xcb_atom_get(conn, "UTF8_STRING"));
+      /* Fail outright */
+      if(xcb_get_property_value_length(prop_r) < 1)
+      return NULL;
+    }
 
     char *title = (char *) xcb_get_property_value(prop_r);
     int len = xcb_get_property_value_length(prop_r);
@@ -334,9 +340,13 @@ char *get_events(){
 
 char *get_window_group(int wid) {
   xcb_get_property_reply_t *prop_r = get_prop(wid, xcb_atom_get(conn, "_GROUP"), XCB_ATOM_STRING);
-  if(xcb_get_property_value_length(prop_r) < 1)
+  if(xcb_get_property_value_length(prop_r) < 1) {
+    //syslog(LOG_ERR, "Attempting to get _GROUP atom failed for window %s\n", wid);
     return NULL;
+  }
   char *group = (char *) xcb_get_property_value(prop_r);
+  if (!group)
+    group = "";
   int len = xcb_get_property_value_length(prop_r);
   char *group_string=malloc(len+1);
   sprintf(group_string, "%.*s", len, group);
