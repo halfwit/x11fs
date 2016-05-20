@@ -339,7 +339,7 @@ char *get_events(){
 }
 
 char *get_window_group(int wid) {
-  xcb_get_property_reply_t *prop_r = get_prop(wid, xcb_atom_get(conn, "_GROUP"), XCB_ATOM_STRING);
+  xcb_get_property_reply_t *prop_r = get_prop(wid, xcb_atom_get(conn, "_X11FS_GROUP"), XCB_ATOM_STRING);
   char *group = (char *) xcb_get_property_value(prop_r);
   if (!group)
     group = "";
@@ -352,6 +352,6 @@ char *get_window_group(int wid) {
 
 
 void set_window_group(int wid, char *buf) {
-  xcb_change_property(conn, XCB_PROP_MODE_REPLACE, wid, xcb_atom_get(conn, "_GROUP"), XCB_ATOM_STRING, 8, strlen(buf)+1, buf);
+  xcb_change_property(conn, XCB_PROP_MODE_REPLACE, wid, xcb_atom_get(conn, "_X11FS_GROUP"), XCB_ATOM_STRING, 8, strlen(buf)+1, buf);
   xcb_flush(conn);
 }
