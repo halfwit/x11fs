@@ -101,11 +101,6 @@ void stack_write(int wid, const char *buf)
 char *title_read(int wid)
 {
 	char *title=get_title(wid);
-  if (!strcmp(title, "")) {
-    char **classes=get_class(wid);
-    title=classes[0];
-    free(classes);
-  }
 	size_t title_len = strlen(title);
 	char *title_string=malloc(title_len+2);
 	if ( !title_string ) {
@@ -186,22 +181,20 @@ void focused_write(int wid, const char *buf)
 }
 
 /* Search if needle s1 exists in haystack s2 
- * Splitting around " " and "\n" and "\t"
+ * if we reach a control char, exit loop 0, if two chars don't match exit loop 1
  */
 
 int search_str(char * s1, const char * s2) {
-  syslog(LOG_ERR, "Strings in: %s %s\n", s1, s2);
-  char * stack = strdup(s2);
-  char * token;
-  for(token = strtok(stack, " \n\t\0"); token != NULL; token = strtok(NULL, " \n\t\0")) { 
-    if (!strcmp(s1, token)) {
-      syslog(LOG_ERR, "Match - %s and %s\n", s1, token);
+  /* If our query is longer than the groups array */
+  if(strlen(s1) > strlen(s2))
+    return 0;
+  for (unsigned long i = 0; i < strlen(s1); i++) {
+    if(s1[i] == '\n' || s1[i] == '\0' || s2[i] == '\n' || s2[i] == '\0')
       return 1;
-    } else {
-      syslog(LOG_ERR, "No match - %s and %s\n", s1, token);
-    }
+    if(s1[i] != s2[i])
+      return 0;
   }
-  return 0;
+  return 1;
 }
 
 
@@ -250,7 +243,7 @@ char *active_groups_read(int wid)
   char * reply;
   while((wid=*(windows++))) {
     if((group = strtok(get_window_group(wid), " \n\t\0"))) {
-      if(get_mapped(wid))
+      if(get_mapped(wid) && !search_str(group, reply))
         reply = append(strdup(reply), strdup(group));
     }
   }
